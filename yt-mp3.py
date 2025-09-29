@@ -1,13 +1,15 @@
-#1.0
+#1.1
 
-import subprocess, platform, requests, sys
+import subprocess, platform, requests, sys, zipfile, os
 
 def updates(dlp):
+    os.makedirs(".config", exist_ok=True)
+    os.makedirs("yt-dlp", exist_ok=True)
     url = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"
     response = requests.get(url)
     if response.status_code == 200:
         try:
-            with open(".DLP_VERSION", "r") as f:
+            with open(".config/DLP_VERSION", "r") as f:
                 version = f.read()
         except FileNotFoundError:
             version = "0.0"  # First run or something 
@@ -18,23 +20,58 @@ def updates(dlp):
         elif platform.system() == "Windows":
             download_url = f"https://github.com/yt-dlp/yt-dlp/releases/download/{tag_name}/yt-dlp.exe"
 
-        if version.strip() != tag_name.strip() or "-f" in sys.argv:
+        if version.strip() != tag_name.strip() or "-d" in sys.argv:
             try:
                 response = requests.get(download_url, stream=True)
                 response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
 
-                with open(dlp, 'wb') as f:
+                with open(dlp, "wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
                 print(f"yt-dlp version updated to {tag_name}")
             except requests.exceptions.RequestException as e:
                 print(f"Error downloading file: {e}")
-            with open(".DLP_VERSION", "w") as f:
+            with open(".config/DLP_VERSION", "w") as f:
                 f.write(tag_name)
             if platform.system() == "Linux":
                 subprocess.run(["chmod", "+x", dlp])
     else:
         print("Unable to contact update server")
+
+
+    url = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest"
+    response = requests.get(url)
+    if response.status_code == 200:
+        try:
+            with open(".config/FFMPEG_VERSION", "r") as f:
+                version = f.read()
+        except FileNotFoundError:
+            version = "0.0"  # First run or something 
+        latest_release = response.json()
+        tag_name = latest_release["tag_name"]
+        download_url = f"https://github.com/yt-dlp/FFmpeg-Builds/releases/download/{tag_name}/ffmpeg-master-latest-win64-gpl.zip"
+
+        if version.strip() != tag_name.strip() or "-f" in sys.argv:
+            try:
+                response = requests.get(download_url, stream=True)
+                response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+
+                with open("ffmpeg.zip", "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                print("Downloaded")
+                with zipfile.ZipFile("ffmpeg.zip", "r") as zip_ref:
+                    zip_ref.extractall()
+                os.remove("ffmpeg.zip")
+                print("Extracted")
+                print(f"ffmpeg version updated to {tag_name}")
+            except requests.exceptions.RequestException as e:
+                print(f"Error downloading file: {e}")
+            with open(".config/FFMPEG_VERSION", "w") as f:
+                f.write(tag_name)
+    else:
+        print("Unable to contact update server")
+    
 
 
 def download_youtube(dlp):
@@ -45,13 +82,16 @@ def download_youtube(dlp):
     if format not in ["mp3", "aac", "mp4", "mkv"]:
         print("Invalid choice. Please enter a format.")
         return
-    subprocess.run([dlp, "-t", format.strip(), url])
+    if platform.system() == "Windows":
+        subprocess.run([dlp, "-t", format.strip(), url, "--ffmpeg-location", "ffmpeg-master-latest-win64-gpl/bin", "-P", "videos"])
+    elif platform.system() == "Linux":
+        subprocess.run([dlp, "-t", format.strip(), url, "-P", "videos"])
 
 if __name__ == "__main__":
     if platform.system() == "Windows":
-        dlp = "yt-dlp.exe"
+        dlp = "yt-dlp/yt-dlp.exe"
     elif platform.system() == "Linux":
-        dlp = "./yt-dlp_linux"
+        dlp = "yt-dlp/yt-dlp_linux"
     else:
         raise Exception
     updates(dlp)
