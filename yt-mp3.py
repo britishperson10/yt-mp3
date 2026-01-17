@@ -79,13 +79,21 @@ def download_youtube(dlp):
     print("Formats:  mp3 aac mp4 mkv")
     format = input("Select format: ").strip().lower()
 
-    if format not in ["mp3", "aac", "mp4", "mkv"]:
+    if format not in ["mp3", "aac", "mp4", "mkv", "3gp", "flv", "ogg", "wav", "webm"]:
         print("Invalid choice. Please enter a format.")
         return
-    if platform.system() == "Windows":
-        subprocess.run([dlp, "-t", format.strip(), url, "--ffmpeg-location", "ffmpeg-master-latest-win64-gpl/bin", "-P", "videos"])
-    elif platform.system() == "Linux":
-        subprocess.run([dlp, "-t", format.strip(), url, "-P", "videos"])
+    #temp fix for SABR stuff
+    if format == "mp4":
+        if platform.system() == "Windows":
+            subprocess.run([dlp, "--recode-video", format.strip(), url, "--ffmpeg-location", "ffmpeg-master-latest-win64-gpl/bin", "-P", "videos"])
+        elif platform.system() == "Linux":
+            subprocess.run([dlp, "--recode-video", format.strip(), url, "-P", "videos"])
+    else:
+        if platform.system() == "Windows":
+            subprocess.run([dlp, "-t", format.strip(), url, "--ffmpeg-location", "ffmpeg-master-latest-win64-gpl/bin", "-P", "videos"])
+        elif platform.system() == "Linux":
+            subprocess.run([dlp, "-t", format.strip(), url, "-P", "videos"])
+
 
 if __name__ == "__main__":
     if platform.system() == "Windows":
