@@ -2,3 +2,5 @@ videos
 .config
 ffmpeg-master-latest-win64-gpl
 yt-dlp
+.yt-mp3.previous.py
+*.Identifier

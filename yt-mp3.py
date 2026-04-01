@@ -1,8 +1,22 @@
-#1.2
+#1.2.1
 
-import subprocess, platform, requests, sys, zipfile, os
+import subprocess, platform, requests, sys, zipfile, os, git, shutil
 
 def updates(dlp, menu_choice):
+    #Updating the program from github
+    shutil.copy2("yt-mp3.py", ".yt-mp3.previous.py")
+    try:
+        repo = git.Repo(os.path.dirname(os.path.abspath(__file__)))
+        origin = repo.remotes.origin
+        origin.fetch()
+        repo.git.checkout('origin/main', '--', 'yt-mp3.py')
+        print("Script updated. Please re-run.")
+        sys.exit(0)
+    except git.InvalidGitRepositoryError:
+        print("Not a git repo, skipping update.")
+    except Exception as e:
+        print(f"Update failed: {e}")
+
     os.makedirs(".config", exist_ok=True)
     if menu_choice == "1":   
         os.makedirs("yt-dlp", exist_ok=True)
