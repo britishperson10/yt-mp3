@@ -1,22 +1,39 @@
-#1.2.1
+#1.2.2
 
-import subprocess, platform, requests, sys, zipfile, os, git, shutil 
+import subprocess, platform, requests, sys, zipfile, os, shutil 
 
-def updates(dlp, menu_choice):
-    #Updating the program from github
-    shutil.copy2("yt-mp3.py", ".yt-mp3.previous.py")
+def self_update():
+    url = "https://raw.githubusercontent.com/britishperson10/yt-mp3/main/yt-mp3.py"
+    print("Checking for script update...")
     try:
-        repo = git.Repo(os.path.dirname(os.path.abspath(__file__)))
-        origin = repo.remotes.origin
-        origin.fetch()
-        repo.git.checkout('origin/main', '--', 'yt-mp3.py')
-        print("Script updated. Please re-run.")
-        sys.exit(0)
-    except git.InvalidGitRepositoryError:
-        print("Not a git repo, skipping update.")
-    except Exception as e:
-        print(f"Update failed: {e}")
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching update: {e}")
+        return
 
+    new_code = response.text
+
+    # Extract version
+    new_version = new_code.splitlines()[0].strip().lstrip("#").strip()
+
+    try:
+        current_version = open(__file__).readline().strip().lstrip("#").strip()
+    except Exception:
+        current_version = "0.0"
+
+    if new_version == current_version and "-u" not in sys.argv:
+        print(f"Already up to date (v{current_version}).")
+        return
+    shutil.copy2("yt-mp3.py", ".yt-mp3.previous.py")
+    script_path = os.path.abspath(__file__)
+    with open(script_path, "w", encoding="utf-8") as f:
+        f.write(new_code)
+
+    print(f"Script updated from v{current_version} to v{new_version}. Please re-run.")
+    sys.exit(0)
+
+def updates(dlp, menu_choice):    
     os.makedirs(".config", exist_ok=True)
     if menu_choice == "1":   
         os.makedirs("yt-dlp", exist_ok=True)
@@ -134,7 +151,7 @@ if __name__ == "__main__":
         print("Please choose a valid option.")
         exit()
    
-
+    self_update()
     updates(dlp, menu_choice)
     if menu_choice == "1":
         download_youtube(dlp)
