@@ -1,6 +1,6 @@
 #1.2.1
 
-import subprocess, platform, requests, sys, zipfile, os, git, shutil
+import subprocess, platform, requests, sys, zipfile, os, git, shutil 
 
 def updates(dlp, menu_choice):
     #Updating the program from github
