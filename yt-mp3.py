@@ -1,4 +1,4 @@
-#1.2.2
+#1.2.3
 
 import subprocess, platform, requests, sys, zipfile, os, shutil 
 
