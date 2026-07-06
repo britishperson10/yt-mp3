@@ -30,7 +30,7 @@ def self_update():
     with open(script_path, "w", encoding="utf-8") as f:
         f.write(new_code)
 
-    print(f"Script updated from v{current_version} to v{new_version}. Please re-run.")
+    print(f"Script updated from v{current_version} to v{new_version}.\nUpdate Comment:  {print(requests.get("https://api.github.com/repos/britishperson10/yt-mp3/commits/main").json()["commit"]["message"])}\nPlease re-run.")
     sys.exit(0)
 
 def updates(dlp, menu_choice):    
@@ -108,6 +108,8 @@ def updates(dlp, menu_choice):
 
 def download_youtube(dlp):
     url = input("Enter the YouTube video URL: ")
+    title = requests.get(f"https://www.youtube.com/oembed?url={url}&format=json").json()["title"]
+    print(f"Downloading:  {title}")
     print("Formats:  mp3 aac mp4 mkv wav ogg webm")
     format = input("Select format: ").strip().lower()
 
@@ -138,7 +140,9 @@ def convert():
     elif platform.system() == "Linux":
         subprocess.run(["ffmpeg", "-i", f"ytmp3temp.{extension}", f"{file_name}.{dest_format}"])
     os.rename(f"ytmp3temp.{extension}", in_file)
-
+    #Temp file sometimes stayed, could not be recreated
+    if os.path.isfile(f"ytmp3temp.{extension}"):
+        os.remove(f"ytmp3temp.{extension}")
 if __name__ == "__main__":
     if platform.system() == "Windows":
         dlp = "yt-dlp/yt-dlp.exe"
